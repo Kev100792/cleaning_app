@@ -1,6 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'dart:io';
+
 import '../models/contact.dart';
 import '../models/adresse.dart';
 import '../models/entreprise.dart';
@@ -15,10 +19,16 @@ import '../models/prestation.dart';
 class DBHelper {
   static Database? _database;
 
-  static Future<void> initDb() async {
-    
-    // Initialisation spécifique pour Web et Desktop
-    databaseFactory = databaseFactoryFfi;
+    static Future<void> initDb() async {
+      if (kIsWeb) {
+        databaseFactory = databaseFactoryFfiWeb;
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        databaseFactory = databaseFactory; // Utiliser la version standard pour Android/iOS
+      } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
+      }
+
     
     if (_database != null) return;
 
@@ -26,10 +36,10 @@ class DBHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'crm.db');
 
-    _database = await openDatabase(
-      path,
+     _database = await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
+        print("Base de données créée avec succès !");
         await db.execute('''
           CREATE TABLE contacts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,7 +140,7 @@ class DBHelper {
           )
         ''');
       },
-    );
+    ));
   }
 
   static Future<Database> database() async {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'providers/client_provider.dart';
 import 'providers/contact_provider.dart';
 import 'providers/entreprise_provider.dart';
@@ -16,10 +15,6 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialisation spécifique pour Web et Desktop
-  databaseFactory = databaseFactoryFfi;
-  
   await DBHelper.initDb();
   runApp(MyApp());
 }
